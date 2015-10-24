@@ -1,7 +1,7 @@
 package main
 
 import (
-	ampl "github.com/alanctgardner/ampl-go"
+	runner "github.com/alanctgardner/ampl-go/runner"
 	"fmt"
 )
 
@@ -10,12 +10,12 @@ import (
 var amplCommands = []string {
 	"model src/github.com/alanctgardner/ampl-go/demo/diet1.mod;",
 	"data src/github.com/alanctgardner/ampl-go/demo/diet1.dat",
-	"write mdiet1;",
+	"write gdiet1;",
 }
 
 func main() {
 	/* Try to get the cached location of the AMPL binary from a file on disk */
-	amplLoc, err := ampl.GetAMPLLoc()
+	amplLoc, err := runner.GetAMPLLoc()
 	if err != nil {
 		fmt.Printf("Error getting cached AMPL executable location: %v\n", err)
 		return
@@ -23,7 +23,7 @@ func main() {
 
 	/* If there was no cached location, prompt the user and cache what they enter - NB: if the user's entry is wrong, delete the cached file to be prompted again. */
 	if amplLoc == "" {
-		amplLoc, err = ampl.PromptAMPLLoc()
+		amplLoc, err = runner.PromptAMPLLoc()
 		if err != nil {
 			fmt.Printf("Error getting AMPL executable location on stdin: %v\n", err)
 			return
@@ -31,7 +31,7 @@ func main() {
 	}
 
 	/* Run the AMPL binary */
-	amplRunner, err := ampl.NewRunner(amplLoc)
+	amplRunner, err := runner.NewRunner(amplLoc)
 	if err != nil {
 		fmt.Printf("Error starting AMPL executable %q: %v\n", amplLoc, err)
 		return
