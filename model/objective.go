@@ -7,8 +7,6 @@ const (
 	ObjectiveMax ObjectiveSense = 1
 )
 
-type ObjectiveShape int
-
 func (s ObjectiveSense) String() string {
 	if s == ObjectiveMin {
 		return "min"
@@ -19,9 +17,19 @@ func (s ObjectiveSense) String() string {
 	}
 }
 
+type ObjectiveShape int
+
+const (
+	
+)
+
+func (s ObjectiveShape) String() string {
+	return ""
+}
+
 type Objective struct {
 	Name string
 	Sense ObjectiveSense
 	Shape ObjectiveShape
-	Variables []Variable
+	Variables []Gradient
 } 

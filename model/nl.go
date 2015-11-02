@@ -27,6 +27,8 @@ func (p *Problem) Constraints() []Constraint {
 	numLinearNetwork := int(p.asl.i.lnc_)
 	constraints := make([]Constraint, numConstraints)
 	bounds := (*[1 << 30]C.real)(unsafe.Pointer(p.asl.i.LUrhs_))[:numConstraints*2:numConstraints*2]
+	cgradList := (*[1 << 30]*C.struct_cgrad)(unsafe.Pointer(p.asl.i.Cgrad_))[:numConstraints:numConstraints]
+	vars := p.Variables()
 	for i := 0; i < numConstraints; i++ {
 		name := C.GoString(C.con_name_ASL(p.asl, C.int(i)))
 
@@ -43,8 +45,9 @@ func (p *Problem) Constraints() []Constraint {
 		}
 
 		/* Get the constraint type */
-		upperIsInf := math.IsInf(float64(bounds[i*2]), 1)
-		lowerIsInf := math.IsInf(float64(bounds[i*2+1]), 0)
+		upperIsInf := math.IsInf(float64(bounds[i*2+1]), 1)
+		lowerIsInf := math.IsInf(float64(bounds[i*2]), 0)
+
 		var conType ConstraintType
 		if upperIsInf && !lowerIsInf {
 			conType = ConstraintGreaterThan	
@@ -55,12 +58,20 @@ func (p *Problem) Constraints() []Constraint {
 		} else if !upperIsInf && !lowerIsInf {
 			conType = ConstraintRange
 		} else {
-			conType = ConstraintNonBinding		}
+			conType = ConstraintNonBinding
+		}
+
 		constraints[i].Name = name
 		constraints[i].Shape = conShape
 		constraints[i].Type = conType
 		constraints[i].Min = float64(bounds[i*2])
 		constraints[i].Max = float64(bounds[i*2+1])
+		constraints[i].Variables = make([]Gradient, 0)
+		gradPtr := cgradList[i]
+		for gradPtr != nil {
+			constraints[i].Variables = append(constraints[i].Variables, Gradient{vars[gradPtr.varno], float64(gradPtr.coef)})
+			gradPtr = (*gradPtr).next
+		}
 	}
 	return constraints
 }
@@ -70,11 +81,18 @@ func (p *Problem) Objectives() []Objective {
 	
 	objectives := make([]Objective, numObjectives)
 	objectiveSenses := (*[1<<30]byte)(unsafe.Pointer(p.asl.i.objtype_))[:numObjectives:numObjectives]
+	ogradList := (*[1 << 30]*C.struct_ograd)(unsafe.Pointer(p.asl.i.Ograd_))[:numObjectives:numObjectives]
+	vars := p.Variables()	
 	for i := 0; i < numObjectives; i++ {
 		name := C.GoString(C.obj_name_ASL(p.asl, C.int(i)))
 		objectives[i].Name = name
 		objectives[i].Sense = ObjectiveSense(objectiveSenses[i])
-		// TODO: Objective shape
+		
+		gradPtr := ogradList[i]
+		for gradPtr != nil {
+			objectives[i].Variables = append(objectives[i].Variables, Gradient{vars[gradPtr.varno], float64(gradPtr.coef)})
+			gradPtr = (*gradPtr).next
+		}
 	}	
 	
 	return objectives

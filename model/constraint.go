@@ -55,6 +55,6 @@ type Constraint struct {
 	Type ConstraintType
 	Min float64
 	Max float64
-	Variables []Variable
+	Variables []Gradient
 }
 
