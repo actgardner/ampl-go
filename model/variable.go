@@ -3,25 +3,28 @@ package model
 type VariableType int
 
 const (
-	VariableNonLinear VariableType = iota
-	VariableNetworkLinear
+	VariableContinuousNonLinear VariableType = iota
+	VariableIntegerNonLinear
+	VariableLinearArc
 	VariableOtherLinear
-	VariableLinearBinary
-	VariableInteger
+	VariableBinary
+	VariableOtherInteger
 )
 
 func (t VariableType) String() string {
 	switch t {
-	case VariableNonLinear:
-		return "Non-Linear"
-	case VariableNetworkLinear:
-		return "Network Linear"
+	case VariableContinuousNonLinear:
+		return "Continuous Non-Linear"
+	case VariableIntegerNonLinear:
+		return "Integer Non-Linear"
+	case VariableLinearArc:
+		return "Linear Arc"
 	case VariableOtherLinear:
 		return "Other Linear"
-	case VariableLinearBinary:
+	case VariableBinary:
 		return "Binary"
-	case VariableInteger:
-		return "Integer"
+	case VariableOtherInteger:
+		return "Other Integer"
 	}
 	return "Unknown"
 }
@@ -31,4 +34,5 @@ type Variable struct {
 	Type VariableType
 	LowerBound float64
 	UpperBound float64
+	Index int
 }

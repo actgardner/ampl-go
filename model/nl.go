@@ -16,10 +16,6 @@ type Problem struct {
 	asl	*C.struct_ASL
 }
 
-func (p *Problem) NumVariables() int {
-	return int(p.asl.i.n_var_)
-}
-
 func (p *Problem) Constraints() []Constraint {
 	numConstraints := int(p.asl.i.n_con_)
 	numNonLinear := int(p.asl.i.nlc_) 
@@ -100,32 +96,49 @@ func (p *Problem) Objectives() []Objective {
 
 func (p *Problem) Variables() []Variable {
 	numVariables := int(p.asl.i.n_var_)
-	numLinearBinary := int(p.asl.i.nbv_)	
-	numLinearNonBinaryInt := int(p.asl.i.niv_)
-	numNonLinear := int(p.asl.i.nlvb_)
-	numNetwork := int(p.asl.i.nwv_)	
+	numNonLinear := intMax(int(p.asl.i.nlvc_), int(p.asl.i.nlvo_))
+	numBoth := int(p.asl.i.nlvb_)
+	numBothInt := int(p.asl.i.nlvbi_)
+	numConst := int(p.asl.i.nlvc_)
+	numConstInt := int(p.asl.i.nlvci_)
+	numObj := int(p.asl.i.nlvo_)
+	numObjInt := int(p.asl.i.nlvoi_)
+	numLinearArcs := int(p.asl.i.nwv_)	
+	numBinary := int(p.asl.i.nbv_)	
+	numNonBinaryInt := int(p.asl.i.niv_)
+
 	variables := make([]Variable, numVariables)
 	bounds := (*[1 << 30]C.real)(unsafe.Pointer(p.asl.i.LUv_))[:numVariables*2:numVariables*2]
+
 	for i := 0; i < numVariables; i++ {
 		name := C.GoString(C.var_name_ASL(p.asl, C.int(i)))
 		var varType VariableType
 		variables[i].Name = name
-		if i < numNonLinear {
-			varType = VariableNonLinear
-		} else if i < numNetwork + numNonLinear {
-			varType = VariableNetworkLinear
-		} else if i < numVariables - (numLinearBinary + numLinearNonBinaryInt) {
+		if i < (numBoth - numBothInt) {	
+			varType = VariableContinuousNonLinear
+		} else if i < (numBoth) {
+			varType = VariableIntegerNonLinear
+		} else if i < (numConst - numConstInt) {
+			varType = VariableContinuousNonLinear
+		} else if i < numConst {
+			varType = VariableIntegerNonLinear
+		} else if i < (numConst + (numObj - (numBoth + numObjInt))) {
+			varType = VariableContinuousNonLinear
+		} else if i < numNonLinear {
+			varType = VariableIntegerNonLinear
+		} else if i < numLinearArcs + numNonLinear {
+			varType = VariableLinearArc
+		} else if i < numVariables - (numBinary + numNonBinaryInt) {
 			varType = VariableOtherLinear
-
-		} else if i < numVariables - numLinearBinary {
-			varType = VariableLinearBinary
-
+		} else if i < numVariables - numNonBinaryInt {
+			varType = VariableBinary
 		} else {
-			varType = VariableInteger
+			varType = VariableOtherInteger
 		}
 		variables[i].Type = varType
 		variables[i].LowerBound = float64(bounds[i*2])
 		variables[i].UpperBound = float64(bounds[i*2+1])
+		variables[i].Index = i
 	}
 	return variables
 }
@@ -137,4 +150,13 @@ func ProblemFromFile(path string) (*Problem) {
 	nl := C.jac0dim_ASL(asl, pathC, C.ftnlen(len(path)))
 	C.fg_read_ASL(asl, nl, 0)
 	return &Problem {path, asl}
+}
+
+/* Return the larger integer */
+func intMax(a, b int) int {
+	if a > b {
+		return a
+	} else {
+		return b
+	}
 }
