@@ -3,10 +3,30 @@ package model
 /*
 #cgo CFLAGS: -DNO_REUSE
 #include "asl.h"
+
+// Helper functions to call gradient and value function pointers
+// Go doesn't support C function pointers
+typedef real (valFunc) (ASL* asl, int n, real *X, fint *nerror);
+typedef void (grdFunc) (ASL* asl, int n, real *X, real *G, fint *nerror);
+typedef void (jacFunc) (ASL* asl, real *X, real *J, fint *nerror);
+
+real callValFunc(void *f, ASL *asl, int n, real *X, fint *nerror) {
+	return ((valFunc*)f)(asl, n, X, nerror);
+}
+
+void callGrdFunc(void *f, ASL *asl, int n, real *X, real *G, fint *nerror) {
+	return ((grdFunc*)f)(asl, n, X, G, nerror);
+}
+
+void callJacFunc(void *f, ASL *asl, real *X, real *J, fint *nerror) {
+	return ((jacFunc*)f)(asl, X, J, nerror);
+}
+
 */
 import "C"
 
 import (
+	"fmt"
 	"math"
 	"unsafe"
 )
@@ -16,6 +36,7 @@ type Problem struct {
 	asl	*C.struct_ASL
 }
 
+/* Get the list of Constraints in this problem */
 func (p *Problem) Constraints() []Constraint {
 	numConstraints := int(p.asl.i.n_con_)
 	numNonLinear := int(p.asl.i.nlc_) 
@@ -63,6 +84,8 @@ func (p *Problem) Constraints() []Constraint {
 		constraints[i].Min = float64(bounds[i*2])
 		constraints[i].Max = float64(bounds[i*2+1])
 		constraints[i].Variables = make([]Gradient, 0)
+		constraints[i].Index = i
+		constraints[i].p = p
 		gradPtr := cgradList[i]
 		for gradPtr != nil {
 			constraints[i].Variables = append(constraints[i].Variables, Gradient{vars[gradPtr.varno], float64(gradPtr.coef)})
@@ -72,6 +95,7 @@ func (p *Problem) Constraints() []Constraint {
 	return constraints
 }
 
+/* Get the list of Objectives in this problem */
 func (p *Problem) Objectives() []Objective {
 	numObjectives := int(p.asl.i.n_obj_)
 	
@@ -83,7 +107,9 @@ func (p *Problem) Objectives() []Objective {
 		name := C.GoString(C.obj_name_ASL(p.asl, C.int(i)))
 		objectives[i].Name = name
 		objectives[i].Sense = ObjectiveSense(objectiveSenses[i])
-		
+		objectives[i].Index = i
+		objectives[i].p = p
+	
 		gradPtr := ogradList[i]
 		for gradPtr != nil {
 			objectives[i].Variables = append(objectives[i].Variables, Gradient{vars[gradPtr.varno], float64(gradPtr.coef)})
@@ -94,6 +120,93 @@ func (p *Problem) Objectives() []Objective {
 	return objectives
 }
 
+func (p *Problem) objValue(index int, x []float64) (float64, error) {
+	numVariables := int(p.asl.i.n_var_)
+	if len(x) != numVariables {
+		return 0, fmt.Errorf("Error: Incorrect number of variables in input: expected %i, got %i", numVariables, len(x)) 
+	}
+	var err C.fint
+	val := C.callValFunc(unsafe.Pointer(p.asl.p.Objval), p.asl, C.int(index), (*C.real)(unsafe.Pointer(&x[0])), &err)
+	if err != 0 {
+		return 0, fmt.Errorf("Error: %i when evaluating objective value", err)
+	}
+	return float64(val), nil
+}
+
+func (p *Problem) objGrad(index int, x []float64) ([]float64, error) {
+	numVariables := int(p.asl.i.n_var_)
+	if len(x) != numVariables {
+		return nil, fmt.Errorf("Error: Incorrect number of variables in input: expected %i, got %i", numVariables, len(x)) 
+	}
+	var err C.fint
+	grad := make([]float64, numVariables)
+	C.callGrdFunc(unsafe.Pointer(p.asl.p.Objgrd), p.asl, C.int(index), (*C.real)(unsafe.Pointer(&x[0])), (*C.real)(unsafe.Pointer(&grad[0])), &err)
+	if err != 0 {
+		return nil, fmt.Errorf("Error: %i when evaluating objective value", err)
+	}
+	return grad, nil
+}
+
+func (p *Problem) conValue(index int, x []float64) (float64, error) {
+	numVariables := int(p.asl.i.n_var_)
+	if len(x) != numVariables {
+		return 0, fmt.Errorf("Error: Incorrect number of variables in input: expected %i, got %i", numVariables, len(x)) 
+	}
+	var err C.fint
+	val := C.callValFunc(unsafe.Pointer(p.asl.p.Conival), p.asl, C.int(index), (*C.real)(unsafe.Pointer(&x[0])), &err)
+	if err != 0 {
+		return 0, fmt.Errorf("Error: %i when evaluating constraint value", err)
+	}
+	return float64(val), nil
+}
+
+func (p *Problem) conGrad(index int, x []float64) ([]float64, error) {
+	numVariables := int(p.asl.i.n_var_)
+	if len(x) != numVariables {
+		return nil, fmt.Errorf("Error: Incorrect number of variables in input: expected %i, got %i", numVariables, len(x)) 
+	}
+	var err C.fint
+	grad := make([]float64, numVariables)
+	C.callGrdFunc(unsafe.Pointer(p.asl.p.Congrd), p.asl, C.int(index), (*C.real)(unsafe.Pointer(&x[0])), (*C.real)(unsafe.Pointer(&grad[0])), &err)
+	if err != 0 {
+		return nil, fmt.Errorf("Error: %i when evaluating constraint value", err)
+	}
+	return grad, nil
+}
+
+/* Evaluate the value of all constraints at point x */
+func (p *Problem) ConstraintValues(x []float64) ([]float64, error) {
+	numVariables := int(p.asl.i.n_var_)
+	numConstraints := int(p.asl.i.n_con_)
+	if len(x) != numVariables {
+		return nil, fmt.Errorf("Error: Incorrect number of variables in input: expected %i, got %i", numVariables, len(x)) 
+	}
+	var err C.fint
+	vals := make([]float64, numConstraints)
+	C.callJacFunc(unsafe.Pointer(p.asl.p.Conval), p.asl, (*C.real)(unsafe.Pointer(&x[0])), (*C.real)(unsafe.Pointer(&vals[0])), &err)
+	if err != 0 {
+		return nil, fmt.Errorf("Error: %i when evaluating constraint values", err)
+	}
+	return vals, nil
+}
+
+/* Evaluate the Jacobian of the constraints */
+func (p *Problem) ConstraintJacobian(x []float64) ([]float64, error) {
+	numVariables := int(p.asl.i.n_var_)
+	numConstraints := int(p.asl.i.n_con_)
+	if len(x) != numVariables {
+		return nil, fmt.Errorf("Error: Incorrect number of variables in input: expected %i, got %i", numVariables, len(x)) 
+	}
+	var err C.fint
+	vals := make([]float64, numConstraints * numVariables)
+	C.callJacFunc(unsafe.Pointer(p.asl.p.Jacval), p.asl, (*C.real)(unsafe.Pointer(&x[0])), (*C.real)(unsafe.Pointer(&vals[0])), &err)
+	if err != 0 {
+		return nil, fmt.Errorf("Error: %i when evaluating constraint Jacobian", err)
+	}
+	return vals, nil
+} 
+
+/* Get the list of Variables in this problem */
 func (p *Problem) Variables() []Variable {
 	numVariables := int(p.asl.i.n_var_)
 	numNonLinear := intMax(int(p.asl.i.nlvc_), int(p.asl.i.nlvo_))
