@@ -1,5 +1,7 @@
 package ampl
 
+/* A package to wrap the AMPL CLI and automate running commands */
+
 import (
 	"bufio"
 	"fmt"
@@ -19,6 +21,7 @@ const (
 	defaultTimeout = 500 * time.Millisecond
 )
 
+/* An instance of the AMPL binary */
 type Runner struct {
 	command *exec.Cmd
 	stdout io.ReadCloser
