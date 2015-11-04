@@ -1,5 +1,7 @@
 package model
 
+/* A package for interacting with AMPL models. */
+
 /*
 #cgo CFLAGS: -DNO_REUSE
 #include "asl.h"
