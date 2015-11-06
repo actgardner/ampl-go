@@ -1,7 +1,6 @@
 package model
 
 import (
-	"fmt"
 	"math"
 	"testing"
         "github.com/stretchr/testify/assert"
