@@ -42,15 +42,27 @@ func GetAMPLLoc() (string, error) {
 /* Present a prompt and try to get the AMPL location on stdin. Cache the location in `amplloc.txt` */
 func PromptAMPLLoc() (string, error) {
 	reader := bufio.NewReader(os.Stdin)
-	fmt.Print("AMPL binary location: ")
+	fmt.Print("Path to the AMPL executable: ")
 	amplLoc, err := reader.ReadString('\n')
 	if err != nil {
 		return "", err
 	}
 	amplLoc = strings.TrimSpace(amplLoc)
-	fmt.Printf("amplLoc: %q\n", amplLoc)
+	// Check if the provided path is the AMPL binary
+	stat, err := os.Stat(amplLoc)
+	if err != nil {
+		return "", err
+	}
+	if stat.IsDir() {
+		amplLoc = amplLoc + "/ampl.exe"
+	}
 	ioutil.WriteFile(AMPLLocFile, []byte(amplLoc), os.ModePerm)
 	return amplLoc, nil
+}
+
+/* Remove the cached location stored in `amplloc.txt` */
+func ClearAMPLLoc() error {
+	return os.Remove(AMPLLocFile)
 }
 
 /* Open a new runner using the AMPL binary at `amplLoc` */ 
