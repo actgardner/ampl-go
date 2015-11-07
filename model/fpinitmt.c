@@ -210,34 +210,6 @@ fpinit_ASL(void)
 		}
 	}
 
-#ifdef __GNUC__
-#if __GNUC__ >= 4 && __GNUC_MINOR__ >= 5
-#undef NO_matherr
-#define NO_matherr
-#endif
-#endif
-
-#ifndef NO_matherr
-#ifdef __MINGW32__
-#define matherr _matherr
-#endif
-
- matherr_rettype
-matherr( struct _exception *e )
-{
-	switch(e->type) {
-	  case _DOMAIN:
-	  case _SING:
-		errno = set_errno(EDOM);
-		break;
-	  case _TLOSS:
-	  case _OVERFLOW:
-		errno = set_errno(ERANGE);
-	  }
-	return 0;
-	}
-#endif /*NO_matherr*/
-
 #ifdef Need_set_errno
 
  static int
