@@ -21,7 +21,7 @@ func main() {
 		return
 	}
 
-	/* If there was no cached location, prompt the user and cache what they enter - NB: if the user's entry is wrong, delete the cached file to be prompted again. */
+	/* If there was no cached location, prompt the user and cache what they enter */
 	if amplLoc == "" {
 		amplLoc, err = runner.PromptAMPLLoc()
 		if err != nil {
@@ -34,6 +34,7 @@ func main() {
 	amplRunner, err := runner.NewRunner(amplLoc)
 	if err != nil {
 		fmt.Printf("Error starting AMPL executable %q: %v\n", amplLoc, err)
+		runner.ClearAMPLLoc()
 		return
 	}
 
