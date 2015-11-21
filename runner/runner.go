@@ -137,6 +137,12 @@ func (self *Runner) RunCommandTimeout (cmd string, timeout time.Duration) (error
 	}	
 }
 
+/* Stop the AMPL binary - blocks until the process has ended. */
+func (self *Runner) Stop() {
+	self.stdin.Write([]byte("exit;\r\n"))
+	self.command.Wait()
+}
+
 /* Returned when AMPL returns an error trying to run a command */
 type AMPLCommandError struct {
   /* The command being run when the error happened */
