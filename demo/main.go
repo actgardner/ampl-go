@@ -2,6 +2,7 @@ package main
 
 import (
 	runner "github.com/alanctgardner/ampl-go/runner"
+	model "github.com/alanctgardner/ampl-go/model"
 	"fmt"
 )
 
@@ -10,6 +11,7 @@ import (
 var amplCommands = []string {
 	"model src/github.com/alanctgardner/ampl-go/demo/diet1.mod;",
 	"data src/github.com/alanctgardner/ampl-go/demo/diet1.dat",
+	"option auxfiles rc;",
 	"write gdiet1;",
 }
 
@@ -38,7 +40,7 @@ func main() {
 		return
 	}
 
-	/* Run each of the commands in order. If there's an error, print it out and quit. Continuing after an error will not work. */
+	/* Run each of the commands in order. If there's an error, print it out and quit. Continuing after an error will not work. */ 
 	for _, cmd := range amplCommands {
 		fmt.Printf("Running command: %q\n", cmd)
 		err := amplRunner.RunCommand(cmd)
@@ -46,5 +48,29 @@ func main() {
 			fmt.Printf("%v\n", err)
 			return
 		}
+	}
+
+	/* Stop the AMPL process */
+	amplRunner.Stop()
+
+	/* Load the .nl file */
+	p := model.ProblemFromFile("diet1.nl")
+
+	/* Print all the variables in the problem */
+	fmt.Printf("\nVariables\n---\n")
+	for _, v := range p.Variables() {
+		fmt.Printf("Variable %v - %s\n", v.Index, v)
+	}
+
+	/* Print all the constraints in the problem */
+	fmt.Printf("\nConstraints\n---\n")
+	for _, c := range p.Constraints() {
+		fmt.Printf("Constraint %v - %s\n", c.Index, c)
+	}
+
+	/* Print all the objectives in the problem */
+	fmt.Printf("\nObjectives\n---\n")
+	for _, o := range p.Objectives() {
+		fmt.Printf("Objective %v - %s\n", o.Index, o)
 	}	
 }

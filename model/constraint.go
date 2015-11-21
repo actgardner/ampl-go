@@ -1,5 +1,9 @@
 package model
 
+import (
+	"strconv"
+)
+
 type ConstraintShape int
 
 const (
@@ -72,3 +76,24 @@ func (c Constraint) Gradient(x []float64) ([]float64, error) {
 	return c.p.conGrad(c.Index, x)
 }
 
+func (c Constraint) String() string {
+	str := "Name: " + c.Name
+	str += " Shape: " + c.Shape.String()
+	str += " ("
+	switch (c.Type) {
+	case ConstraintGreaterThan:
+		str += "> " + strconv.FormatFloat(c.Min, 'E', -1, 64) 
+	case ConstraintLessThan:
+		str += "< " + strconv.FormatFloat(c.Max, 'E', -1, 64) 
+	case ConstraintEqualTo:
+		str += "=" + strconv.FormatFloat(c.Min, 'E', -1, 64) 
+	case ConstraintRange:
+		str += strconv.FormatFloat(c.Min, 'E', -1, 64) + "< <" + strconv.FormatFloat(c.Max, 'E', -1, 64) 
+	}
+	str += ")"
+	str += "\r\n"
+	for _, v := range c.Variables {
+		str += "\t" + v.String() + "\r\n"
+	}
+	return str
+}

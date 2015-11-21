@@ -46,3 +46,14 @@ func (o Objective) Value(x []float64) (float64, error) {
 func (o Objective) Gradient(x []float64) ([]float64, error) {
 	return o.p.objGrad(o.Index, x)
 }
+
+func (o Objective) String() string {
+	str := "Name: " + o.Name
+	str += " Shape: " + o.Shape.String()
+	str += " Sense: " + o.Sense.String()
+	str += "\r\n"
+	for _, v := range o.Variables {
+		str += "\t" + v.String() + "\r\n"
+	}
+	return str
+}

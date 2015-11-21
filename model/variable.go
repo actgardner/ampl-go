@@ -1,5 +1,9 @@
 package model
 
+import (
+  "strconv"
+)
+
 type VariableType int
 
 const (
@@ -35,4 +39,12 @@ type Variable struct {
 	LowerBound float64
 	UpperBound float64
 	Index int
+}
+
+func (v Variable) String() string {
+	str := "Name: " + v.Name
+	str += " Type: " + v.Type.String()
+	str += " Min: " + strconv.FormatFloat(v.LowerBound, 'E', -1, 64)
+	str += " Max: " + strconv.FormatFloat(v.UpperBound, 'E', -1, 64)
+	return str
 }
