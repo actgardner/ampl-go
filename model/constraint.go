@@ -97,3 +97,18 @@ func (c Constraint) String() string {
 	}
 	return str
 }
+
+/* Returns a bool for whether or not the given value (as computed by `Value`) satisfies this constraint */
+func (c Constraint) IsSatisfied(value float64) bool {
+	switch (c.Type) {
+	case ConstraintGreaterThan:
+		return value > c.Min 
+	case ConstraintLessThan:
+		return value < c.Max 
+	case ConstraintEqualTo:
+		return value == c.Min 
+	case ConstraintRange:
+		return value > c.Min && value < c.Max 
+	}
+	return true	
+}

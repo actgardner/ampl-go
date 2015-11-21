@@ -1,9 +1,11 @@
 package main
 
 import (
+	"fmt"
+	"math/rand"
+	"time"
 	runner "github.com/alanctgardner/ampl-go/runner"
 	model "github.com/alanctgardner/ampl-go/model"
-	"fmt"
 )
 
 /* Test commands to submit to the AMPL CLI - in this case
@@ -72,5 +74,58 @@ func main() {
 	fmt.Printf("\nObjectives\n---\n")
 	for _, o := range p.Objectives() {
 		fmt.Printf("Objective %v - %s\n", o.Index, o)
-	}	
+	}
+
+	/* Get random values within the bounds of every variable */
+	fmt.Printf("\nRandom variable values:\n---\n")
+	vars := make([]float64, len(p.Variables())) 
+	rand.Seed(time.Now().Unix())
+	for i, v := range p.Variables() {
+		vars[i] = (rand.Float64() * (v.UpperBound - v.LowerBound)) + v.LowerBound	
+		fmt.Printf("\t%v = %v\n", v.Name, vars[i])
+	}
+
+	/* Evaluate every constraint at the randomly chosen point */
+	fmt.Printf("\nConstraint values:\n---\n")
+	for _, c := range p.Constraints() {
+		conVal, err := c.Value(vars)
+		if err != nil {
+			fmt.Printf("Error evaluating constraint %v: %v\n", c.Name, err)
+			return
+		}
+		fmt.Printf("\t%v = %v (satisfied: %v)\n", c.Name, conVal, c.IsSatisfied(conVal))		
+	}
+
+	/* Evaluate every objective at the random point */
+	fmt.Printf("\nObjective values:\n---\n")
+	for _, o := range p.Objectives() {
+		objVal, err := o.Value(vars)
+		if err != nil {
+			fmt.Printf("Error evaluating objective %v: %v\n", o.Name, err)
+			return
+		}
+		fmt.Printf("\t%v = %v\n", o.Name, objVal)		
+	}
+
+	/* Compute the gradient of every constraint at the randomly chosen point */
+	fmt.Printf("\nConstraint gradients:\n---\n")
+	for _, c := range p.Constraints() {
+		conGrad, err := c.Gradient(vars)
+		if err != nil {
+			fmt.Printf("Error evaluating constraint gradient %v: %v\n", c.Name, err)
+			return
+		}
+		fmt.Printf("\t%v = %v\n", c.Name, conGrad)	
+	}
+
+	/* Compute the gradient of every objective at the random point */
+	fmt.Printf("\nObjective gradients:\n---\n")
+	for _, o := range p.Objectives() {
+		objGrad, err := o.Gradient(vars)
+		if err != nil {
+			fmt.Printf("Error evaluating objective gradient %v: %v\n", o.Name, err)
+			return
+		}
+		fmt.Printf("\t%v = %v\n", o.Name, objGrad)
+	}
 }

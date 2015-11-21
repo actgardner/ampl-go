@@ -17,21 +17,10 @@ func (s ObjectiveSense) String() string {
 	}
 }
 
-type ObjectiveShape int
-
-const (
-	
-)
-
-func (s ObjectiveShape) String() string {
-	return ""
-}
-
 /* Represents a single objective in the problem */
 type Objective struct {
 	Name string
 	Sense ObjectiveSense
-	Shape ObjectiveShape
 	Variables []Gradient
 	Index int
 	p *Problem 
@@ -49,7 +38,6 @@ func (o Objective) Gradient(x []float64) ([]float64, error) {
 
 func (o Objective) String() string {
 	str := "Name: " + o.Name
-	str += " Shape: " + o.Shape.String()
 	str += " Sense: " + o.Sense.String()
 	str += "\r\n"
 	for _, v := range o.Variables {
