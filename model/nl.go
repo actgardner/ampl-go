@@ -57,7 +57,7 @@ func (p *Problem) Constraints() []Constraint {
 			conShape = NonLinearGeneralConstraint
 		} else if i < numNonLinear { 
 			conShape = NonLinearNetworkConstraint
-		} else if i < numConstraints - numLinearNetwork {
+		} else if i < numNonLinear + numLinearNetwork {
 			conShape = LinearNetworkConstraint
 		} else {
 			conShape = LinearGeneralConstraint
@@ -221,39 +221,109 @@ func (p *Problem) Variables() []Variable {
 	numLinearArcs := int(p.asl.i.nwv_)	
 	numBinary := int(p.asl.i.nbv_)	
 	numNonBinaryInt := int(p.asl.i.niv_)
-
 	variables := make([]Variable, numVariables)
 	bounds := (*[1 << 30]C.real)(unsafe.Pointer(p.asl.i.LUv_))[:numVariables*2:numVariables*2]
 
-	for i := 0; i < numVariables; i++ {
-		name := C.GoString(C.var_name_ASL(p.asl, C.int(i)))
-		var varType VariableType
-		variables[i].Name = name
-		if i < (numBoth - numBothInt) {	
-			varType = VariableContinuousNonLinear
-		} else if i < (numBoth) {
-			varType = VariableIntegerNonLinear
-		} else if i < (numConst - numConstInt) {
-			varType = VariableContinuousNonLinear
-		} else if i < numConst {
-			varType = VariableIntegerNonLinear
-		} else if i < (numConst + (numObj - (numBoth + numObjInt))) {
-			varType = VariableContinuousNonLinear
-		} else if i < numNonLinear {
-			varType = VariableIntegerNonLinear
-		} else if i < numLinearArcs + numNonLinear {
-			varType = VariableLinearArc
-		} else if i < numVariables - (numBinary + numNonBinaryInt) {
-			varType = VariableOtherLinear
-		} else if i < numVariables - numNonBinaryInt {
-			varType = VariableBinary
-		} else {
-			varType = VariableOtherInteger
-		}
-		variables[i].Type = varType
-		variables[i].LowerBound = float64(bounds[i*2])
-		variables[i].UpperBound = float64(bounds[i*2+1])
-		variables[i].Index = i
+	j := 0
+	for i := 0; i < numBoth - numBothInt; i++ {
+		name := C.GoString(C.var_name_ASL(p.asl, C.int(j)))
+		variables[j].Name = name
+		variables[j].Type = VariableContinuousNonLinear
+		variables[j].LowerBound = float64(bounds[j*2])
+		variables[j].UpperBound = float64(bounds[j*2+1])
+		variables[j].Index = j 
+		j++
+	}
+
+	for i := 0; i < numBothInt; i++ {
+		name := C.GoString(C.var_name_ASL(p.asl, C.int(j)))
+		variables[j].Name = name
+		variables[j].Type = VariableIntegerNonLinear
+		variables[j].LowerBound = float64(bounds[j*2])
+		variables[j].UpperBound = float64(bounds[j*2+1])
+		variables[j].Index = j
+		j++
+	}
+
+	for i := 0; i < numConst - (numBoth + numConstInt); i++ {
+		name := C.GoString(C.var_name_ASL(p.asl, C.int(j)))
+		variables[j].Name = name
+		variables[j].Type = VariableContinuousNonLinear
+		variables[j].LowerBound = float64(bounds[j*2])
+		variables[j].UpperBound = float64(bounds[j*2+1])
+		variables[j].Index = j
+		j++
+	}
+
+	for i := 0; i < numConstInt; i++ {
+		name := C.GoString(C.var_name_ASL(p.asl, C.int(j)))
+		variables[j].Name = name
+		variables[j].Type = VariableIntegerNonLinear
+		variables[j].LowerBound = float64(bounds[j*2])
+		variables[j].UpperBound = float64(bounds[j*2+1])
+		variables[j].Index = j
+		j++
+	}
+
+	for i := 0; i < numObj - (numConst + numObjInt); i++ {
+		name := C.GoString(C.var_name_ASL(p.asl, C.int(j)))
+		variables[j].Name = name
+		variables[j].Type = VariableContinuousNonLinear
+		variables[j].LowerBound = float64(bounds[j*2])
+		variables[j].UpperBound = float64(bounds[j*2+1])
+		variables[j].Index = j
+		j++
+	}
+
+	for i := 0; i < numObjInt; i++ {
+		name := C.GoString(C.var_name_ASL(p.asl, C.int(j)))
+		variables[j].Name = name
+		variables[j].Type = VariableIntegerNonLinear
+		variables[j].LowerBound = float64(bounds[j*2])
+		variables[j].UpperBound = float64(bounds[j*2+1])
+		variables[j].Index = j
+		j++
+	}
+
+	for i := 0; i < numLinearArcs; i++ {
+		name := C.GoString(C.var_name_ASL(p.asl, C.int(j)))
+		variables[j].Name = name
+		variables[j].Type = VariableLinearArc
+		variables[j].LowerBound = float64(bounds[j*2])
+		variables[j].UpperBound = float64(bounds[j*2+1])
+		variables[j].Index = j
+		j++
+	}
+
+	fmt.Printf("Binary: %v\n", numBinary)
+	for i := 0; i < numVariables - (numNonLinear + numBinary + numNonBinaryInt + numLinearArcs); i++ {
+		name := C.GoString(C.var_name_ASL(p.asl, C.int(j)))
+		variables[j].Name = name
+		variables[j].Type = VariableOtherLinear
+		variables[j].LowerBound = float64(bounds[j*2])
+		variables[j].UpperBound = float64(bounds[j*2+1])
+		variables[j].Index = j
+		j++
+	}
+
+	for i := 0; i < numBinary; i++ {
+		name := C.GoString(C.var_name_ASL(p.asl, C.int(j)))
+		variables[j].Name = name
+		variables[j].Type = VariableBinary
+		variables[j].LowerBound = float64(bounds[j*2])
+		variables[j].UpperBound = float64(bounds[j*2+1])
+		variables[j].Index = j
+		j++
+	}
+
+	for i := 0; i < numNonBinaryInt; i++ {
+		name := C.GoString(C.var_name_ASL(p.asl, C.int(j)))
+		variables[j].Name = name
+		variables[j].Type = VariableOtherInteger
+		variables[j].LowerBound = float64(bounds[j*2])
+		variables[j].UpperBound = float64(bounds[j*2+1])
+		variables[j].Index = j
+		j++
 	}
 	return variables
 }
