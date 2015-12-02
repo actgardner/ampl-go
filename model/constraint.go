@@ -65,14 +65,12 @@ type Constraint struct {
 	p *Problem
 }
 
-/* Get the value of the constraint at a given point. Returns
-   an error if AMPL is unable to compute the value */
+/* Get the value of the constraint at a given point. Returns an error if AMPL is unable to compute the value */
 func (c Constraint) Value(x []float64) (float64, error) {
 	return c.p.conValue(c.Index, x)
 }
 
-/* Get the gradient of the constraint at a given point. Returns
-   a nil slice and an error if AMPL is unable to compute the gradient */
+/* Get the gradient of the constraint at a given point. Returns a nil slice and an error if AMPL is unable to compute the gradient */
 func (c Constraint) Gradient(x []float64) ([]float64, error) {
 	return c.p.conGrad(c.Index, x)
 }
