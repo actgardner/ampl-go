@@ -21,7 +21,8 @@ func (s ObjectiveSense) String() string {
 type Objective struct {
 	Name string
 	Sense ObjectiveSense
-	Variables []Gradient
+	Class Class
+	Variables []Variable
 	Index int
 	p *Problem 
 }
@@ -39,6 +40,7 @@ func (o Objective) Gradient(x []float64) ([]float64, error) {
 func (o Objective) String() string {
 	str := "Name: " + o.Name
 	str += " Sense: " + o.Sense.String()
+	str += " Class: " + o.Class.String()
 	str += "\r\n"
 	for _, v := range o.Variables {
 		str += "\t" + v.String() + "\r\n"

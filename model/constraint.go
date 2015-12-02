@@ -57,9 +57,10 @@ type Constraint struct {
  	Name string
 	Shape ConstraintShape
 	Type ConstraintType
+	Class Class
 	Min float64
 	Max float64
-	Variables []Gradient
+	Variables []Variable
 	Index int
 	p *Problem
 }
@@ -79,6 +80,7 @@ func (c Constraint) Gradient(x []float64) ([]float64, error) {
 func (c Constraint) String() string {
 	str := "Name: " + c.Name
 	str += " Shape: " + c.Shape.String()
+	str += " Class: " + c.Class.String()
 	str += " ("
 	switch (c.Type) {
 	case ConstraintGreaterThan:

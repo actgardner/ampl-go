@@ -4,7 +4,10 @@ package model
 
 /*
 #cgo CFLAGS: -DNO_REUSE
+#define PSHVREAD
 #include "asl.h"
+#include "psinfo.h"
+#include "nlp2.h"
 
 // Helper functions to call gradient and value function pointers
 // Go doesn't support C function pointers
@@ -36,6 +39,7 @@ import (
 type Problem struct {
 	Name	string
 	asl	*C.struct_ASL
+	aslPfgh	*C.struct_ASL_pfgh
 }
 
 /* Get the list of Constraints in this problem */
@@ -47,6 +51,7 @@ func (p *Problem) Constraints() []Constraint {
 	constraints := make([]Constraint, numConstraints)
 	bounds := (*[1 << 30]C.real)(unsafe.Pointer(p.asl.i.LUrhs_))[:numConstraints*2:numConstraints*2]
 	cgradList := (*[1 << 30]*C.struct_cgrad)(unsafe.Pointer(p.asl.i.Cgrad_))[:numConstraints:numConstraints]
+	cClassList := (*[1 << 30]C.char)(unsafe.Pointer(p.aslPfgh.I.c_class))[:numConstraints:numConstraints]
 	vars := p.Variables()
 	for i := 0; i < numConstraints; i++ {
 		name := C.GoString(C.con_name_ASL(p.asl, C.int(i)))
@@ -62,7 +67,7 @@ func (p *Problem) Constraints() []Constraint {
 		} else {
 			conShape = LinearGeneralConstraint
 		}
-
+		
 		/* Get the constraint type */
 		upperIsInf := math.IsInf(float64(bounds[i*2+1]), 1)
 		lowerIsInf := math.IsInf(float64(bounds[i*2]), 0)
@@ -85,12 +90,13 @@ func (p *Problem) Constraints() []Constraint {
 		constraints[i].Type = conType
 		constraints[i].Min = float64(bounds[i*2])
 		constraints[i].Max = float64(bounds[i*2+1])
-		constraints[i].Variables = make([]Gradient, 0)
+		constraints[i].Variables = make([]Variable, 0)
 		constraints[i].Index = i
+		constraints[i].Class = Class(cClassList[i])
 		constraints[i].p = p
 		gradPtr := cgradList[i]
 		for gradPtr != nil {
-			constraints[i].Variables = append(constraints[i].Variables, Gradient{vars[gradPtr.varno], float64(gradPtr.coef)})
+			constraints[i].Variables = append(constraints[i].Variables, vars[gradPtr.varno])
 			gradPtr = (*gradPtr).next
 		}
 	}
@@ -104,17 +110,19 @@ func (p *Problem) Objectives() []Objective {
 	objectives := make([]Objective, numObjectives)
 	objectiveSenses := (*[1<<30]byte)(unsafe.Pointer(p.asl.i.objtype_))[:numObjectives:numObjectives]
 	ogradList := (*[1 << 30]*C.struct_ograd)(unsafe.Pointer(p.asl.i.Ograd_))[:numObjectives:numObjectives]
+	oClassList := (*[1 << 30]C.char)(unsafe.Pointer(p.aslPfgh.I.o_class))[:numObjectives:numObjectives]
 	vars := p.Variables()	
 	for i := 0; i < numObjectives; i++ {
 		name := C.GoString(C.obj_name_ASL(p.asl, C.int(i)))
 		objectives[i].Name = name
 		objectives[i].Sense = ObjectiveSense(objectiveSenses[i])
 		objectives[i].Index = i
+		objectives[i].Class = Class(oClassList[i])
 		objectives[i].p = p
 	
 		gradPtr := ogradList[i]
 		for gradPtr != nil {
-			objectives[i].Variables = append(objectives[i].Variables, Gradient{vars[gradPtr.varno], float64(gradPtr.coef)})
+			objectives[i].Variables = append(objectives[i].Variables, vars[gradPtr.varno])
 			gradPtr = (*gradPtr).next
 		}
 	}	
@@ -295,7 +303,6 @@ func (p *Problem) Variables() []Variable {
 		j++
 	}
 
-	fmt.Printf("Binary: %v\n", numBinary)
 	for i := 0; i < numVariables - (numNonLinear + numBinary + numNonBinaryInt + numLinearArcs); i++ {
 		name := C.GoString(C.var_name_ASL(p.asl, C.int(j)))
 		variables[j].Name = name
@@ -331,10 +338,11 @@ func (p *Problem) Variables() []Variable {
 /* Load a problem from a `.nl` file */
 func ProblemFromFile(path string) (*Problem) {
 	pathC := C.CString(path)
-	asl := C.ASL_alloc(C.ASL_read_fg)
+	asl := C.ASL_alloc(C.ASL_read_pfgh)
 	nl := C.jac0dim_ASL(asl, pathC, C.ftnlen(len(path)))
-	C.fg_read_ASL(asl, nl, 0)
-	return &Problem {path, asl}
+	C.pfgh_read_ASL(asl, nl, C.ASL_find_o_class|C.ASL_find_c_class)
+	aslPfgh := (*C.ASL_pfgh)(unsafe.Pointer(asl))
+	return &Problem {path, asl, aslPfgh}
 }
 
 /* Return the larger integer */

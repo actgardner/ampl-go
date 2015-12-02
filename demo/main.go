@@ -11,8 +11,7 @@ import (
 /* Test commands to submit to the AMPL CLI - in this case
    use the diet model from the AMPL book and write an MPS file */
 var amplCommands = []string {
-	"model src/github.com/alanctgardner/ampl-go/demo/diet1.mod;",
-	"data src/github.com/alanctgardner/ampl-go/demo/diet1.dat",
+	"model comprehensive;",
 	"option auxfiles rc;",
 	"write gdiet1;",
 }
