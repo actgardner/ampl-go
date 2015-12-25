@@ -236,7 +236,7 @@ func (p *Problem) Variables() []Variable {
 	for i := 0; i < numBoth - numBothInt; i++ {
 		name := C.GoString(C.var_name_ASL(p.asl, C.int(j)))
 		variables[j].Name = name
-		variables[j].Type = VariableContinuousNonLinear
+		variables[j].Type = VariableReal
 		variables[j].LowerBound = float64(bounds[j*2])
 		variables[j].UpperBound = float64(bounds[j*2+1])
 		variables[j].Index = j 
@@ -246,7 +246,7 @@ func (p *Problem) Variables() []Variable {
 	for i := 0; i < numBothInt; i++ {
 		name := C.GoString(C.var_name_ASL(p.asl, C.int(j)))
 		variables[j].Name = name
-		variables[j].Type = VariableIntegerNonLinear
+		variables[j].Type = VariableInteger
 		variables[j].LowerBound = float64(bounds[j*2])
 		variables[j].UpperBound = float64(bounds[j*2+1])
 		variables[j].Index = j
@@ -256,7 +256,7 @@ func (p *Problem) Variables() []Variable {
 	for i := 0; i < numConst - (numBoth + numConstInt); i++ {
 		name := C.GoString(C.var_name_ASL(p.asl, C.int(j)))
 		variables[j].Name = name
-		variables[j].Type = VariableContinuousNonLinear
+		variables[j].Type = VariableReal
 		variables[j].LowerBound = float64(bounds[j*2])
 		variables[j].UpperBound = float64(bounds[j*2+1])
 		variables[j].Index = j
@@ -266,7 +266,7 @@ func (p *Problem) Variables() []Variable {
 	for i := 0; i < numConstInt; i++ {
 		name := C.GoString(C.var_name_ASL(p.asl, C.int(j)))
 		variables[j].Name = name
-		variables[j].Type = VariableIntegerNonLinear
+		variables[j].Type = VariableInteger
 		variables[j].LowerBound = float64(bounds[j*2])
 		variables[j].UpperBound = float64(bounds[j*2+1])
 		variables[j].Index = j
@@ -276,7 +276,7 @@ func (p *Problem) Variables() []Variable {
 	for i := 0; i < numObj - (numConst + numObjInt); i++ {
 		name := C.GoString(C.var_name_ASL(p.asl, C.int(j)))
 		variables[j].Name = name
-		variables[j].Type = VariableContinuousNonLinear
+		variables[j].Type = VariableReal
 		variables[j].LowerBound = float64(bounds[j*2])
 		variables[j].UpperBound = float64(bounds[j*2+1])
 		variables[j].Index = j
@@ -286,7 +286,7 @@ func (p *Problem) Variables() []Variable {
 	for i := 0; i < numObjInt; i++ {
 		name := C.GoString(C.var_name_ASL(p.asl, C.int(j)))
 		variables[j].Name = name
-		variables[j].Type = VariableIntegerNonLinear
+		variables[j].Type = VariableInteger
 		variables[j].LowerBound = float64(bounds[j*2])
 		variables[j].UpperBound = float64(bounds[j*2+1])
 		variables[j].Index = j
@@ -296,7 +296,7 @@ func (p *Problem) Variables() []Variable {
 	for i := 0; i < numLinearArcs; i++ {
 		name := C.GoString(C.var_name_ASL(p.asl, C.int(j)))
 		variables[j].Name = name
-		variables[j].Type = VariableLinearArc
+		variables[j].Type = VariableArc
 		variables[j].LowerBound = float64(bounds[j*2])
 		variables[j].UpperBound = float64(bounds[j*2+1])
 		variables[j].Index = j
@@ -306,7 +306,7 @@ func (p *Problem) Variables() []Variable {
 	for i := 0; i < numVariables - (numNonLinear + numBinary + numNonBinaryInt + numLinearArcs); i++ {
 		name := C.GoString(C.var_name_ASL(p.asl, C.int(j)))
 		variables[j].Name = name
-		variables[j].Type = VariableOtherLinear
+		variables[j].Type = VariableOther
 		variables[j].LowerBound = float64(bounds[j*2])
 		variables[j].UpperBound = float64(bounds[j*2+1])
 		variables[j].Index = j
@@ -326,7 +326,7 @@ func (p *Problem) Variables() []Variable {
 	for i := 0; i < numNonBinaryInt; i++ {
 		name := C.GoString(C.var_name_ASL(p.asl, C.int(j)))
 		variables[j].Name = name
-		variables[j].Type = VariableOtherInteger
+		variables[j].Type = VariableInteger
 		variables[j].LowerBound = float64(bounds[j*2])
 		variables[j].UpperBound = float64(bounds[j*2+1])
 		variables[j].Index = j

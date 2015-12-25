@@ -7,28 +7,25 @@ import (
 type VariableType int
 
 const (
-	VariableContinuousNonLinear VariableType = iota
-	VariableIntegerNonLinear
-	VariableLinearArc
-	VariableOtherLinear
+	VariableReal VariableType = iota
+	VariableInteger
 	VariableBinary
-	VariableOtherInteger
+	VariableArc
+	VariableOther
 )
 
 func (t VariableType) String() string {
 	switch t {
-	case VariableContinuousNonLinear:
-		return "Continuous Non-Linear"
-	case VariableIntegerNonLinear:
-		return "Integer Non-Linear"
-	case VariableLinearArc:
-		return "Linear Arc"
-	case VariableOtherLinear:
-		return "Other Linear"
+	case VariableReal:
+		return "Real"
+	case VariableInteger:
+		return "Integer"
 	case VariableBinary:
 		return "Binary"
-	case VariableOtherInteger:
-		return "Other Integer"
+	case VariableArc:
+		return "Arc"
+	case VariableOther:
+		return "Other"
 	}
 	return "Unknown"
 }
