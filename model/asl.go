@@ -246,9 +246,14 @@ func (p *Problem) Variables() []Variable {
 	for i := 0; i < numBothInt; i++ {
 		name := C.GoString(C.var_name_ASL(p.asl, C.int(j)))
 		variables[j].Name = name
-		variables[j].Type = VariableInteger
 		variables[j].LowerBound = float64(bounds[j*2])
 		variables[j].UpperBound = float64(bounds[j*2+1])
+		// Integer variables may in fact be binary - check if the bounds are 0 and 1
+		if variables[j].LowerBound == 0 && variables[j].UpperBound == 1 {
+			variables[j].Type = VariableBinary
+		} else {
+			variables[j].Type = VariableInteger
+		}
 		variables[j].Index = j
 		j++
 	}
@@ -266,9 +271,14 @@ func (p *Problem) Variables() []Variable {
 	for i := 0; i < numConstInt; i++ {
 		name := C.GoString(C.var_name_ASL(p.asl, C.int(j)))
 		variables[j].Name = name
-		variables[j].Type = VariableInteger
 		variables[j].LowerBound = float64(bounds[j*2])
 		variables[j].UpperBound = float64(bounds[j*2+1])
+		// Integer variables may in fact be binary - check if the bounds are 0 and 1
+		if variables[j].LowerBound == 0 && variables[j].UpperBound == 1 {
+			variables[j].Type = VariableBinary
+		} else {
+			variables[j].Type = VariableInteger
+		}
 		variables[j].Index = j
 		j++
 	}
@@ -286,9 +296,14 @@ func (p *Problem) Variables() []Variable {
 	for i := 0; i < numObjInt; i++ {
 		name := C.GoString(C.var_name_ASL(p.asl, C.int(j)))
 		variables[j].Name = name
-		variables[j].Type = VariableInteger
 		variables[j].LowerBound = float64(bounds[j*2])
 		variables[j].UpperBound = float64(bounds[j*2+1])
+		// Integer variables may in fact be binary - check if the bounds are 0 and 1
+		if variables[j].LowerBound == 0 && variables[j].UpperBound == 1 {
+			variables[j].Type = VariableBinary
+		} else {
+			variables[j].Type = VariableInteger
+		}
 		variables[j].Index = j
 		j++
 	}
