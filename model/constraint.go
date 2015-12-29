@@ -4,40 +4,17 @@ import (
 	"strconv"
 )
 
-type ConstraintShape int
+type ConstraintSense int
 
 const (
-	NonLinearGeneralConstraint ConstraintShape = iota
-	NonLinearNetworkConstraint
-	LinearGeneralConstraint
-	LinearNetworkConstraint
-)
-
-func (s ConstraintShape) String() string {
-	switch (s) {
-	case NonLinearGeneralConstraint:
-		return "Non-Linear General"
-	case NonLinearNetworkConstraint:
-		return "Non-Linear Network"
-	case LinearGeneralConstraint:
-		return "Linear General"
-	case LinearNetworkConstraint:
-		return "Linear Network"
-	}
-	return "Unknown"
-}
-
-type ConstraintType int
-
-const (
-	ConstraintGreaterThan ConstraintType = iota
+	ConstraintGreaterThan ConstraintSense = iota
 	ConstraintLessThan
 	ConstraintEqualTo
 	ConstraintRange
 	ConstraintNonBinding
 )
 
-func (t ConstraintType) String() string {
+func (t ConstraintSense) String() string {
 	switch (t) {
 	case ConstraintGreaterThan:
 		return "Greater"
@@ -55,9 +32,8 @@ func (t ConstraintType) String() string {
 
 type Constraint struct {
  	Name string
-	Shape ConstraintShape
-	Type ConstraintType
-	Class Class
+	Sense ConstraintSense
+	Shape Shape
 	Min float64
 	Max float64
 	Variables []Variable
@@ -78,15 +54,15 @@ func (c Constraint) Gradient(x []float64) ([]float64, error) {
 func (c Constraint) String() string {
 	str := "Name: " + c.Name
 	str += " Shape: " + c.Shape.String()
-	str += " Class: " + c.Class.String()
+	str += " Sense: " + c.Sense.String()
 	str += " ("
-	switch (c.Type) {
+	switch (c.Sense) {
 	case ConstraintGreaterThan:
-		str += "> " + strconv.FormatFloat(c.Min, 'E', -1, 64) 
+		str += ">= " + strconv.FormatFloat(c.Min, 'E', -1, 64) 
 	case ConstraintLessThan:
-		str += "< " + strconv.FormatFloat(c.Max, 'E', -1, 64) 
+		str += "<= " + strconv.FormatFloat(c.Max, 'E', -1, 64) 
 	case ConstraintEqualTo:
-		str += "=" + strconv.FormatFloat(c.Min, 'E', -1, 64) 
+		str += "== " + strconv.FormatFloat(c.Min, 'E', -1, 64) 
 	case ConstraintRange:
 		str += strconv.FormatFloat(c.Min, 'E', -1, 64) + "< <" + strconv.FormatFloat(c.Max, 'E', -1, 64) 
 	}
@@ -100,7 +76,7 @@ func (c Constraint) String() string {
 
 /* Returns a bool for whether or not the given value (as computed by `Value`) satisfies this constraint */
 func (c Constraint) IsSatisfied(value float64) bool {
-	switch (c.Type) {
+	switch (c.Sense) {
 	case ConstraintGreaterThan:
 		return value > c.Min 
 	case ConstraintLessThan:
