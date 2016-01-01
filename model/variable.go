@@ -11,7 +11,6 @@ const (
 	VariableInteger
 	VariableBinary
 	VariableArc
-	VariableOther
 )
 
 func (t VariableType) String() string {
@@ -24,8 +23,6 @@ func (t VariableType) String() string {
 		return "Binary"
 	case VariableArc:
 		return "Arc"
-	case VariableOther:
-		return "Other"
 	}
 	return "Unknown"
 }

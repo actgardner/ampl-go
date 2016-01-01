@@ -305,7 +305,7 @@ func (p *Problem) Variables() []Variable {
 	for i := 0; i < numVariables - (numNonLinear + numBinary + numNonBinaryInt + numLinearArcs); i++ {
 		name := C.GoString(C.var_name_ASL(p.asl, C.int(j)))
 		variables[j].Name = name
-		variables[j].Type = VariableOther
+		variables[j].Type = VariableReal
 		variables[j].LowerBound = float64(bounds[j*2])
 		variables[j].UpperBound = float64(bounds[j*2+1])
 		variables[j].Index = j
