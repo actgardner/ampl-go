@@ -9,6 +9,8 @@ package model
 #include "psinfo.h"
 #include "nlp2.h"
 
+Jmp_buf *null = 0;
+
 // Helper functions to call gradient and value function pointers
 // Go doesn't support C function pointers
 typedef real (valFunc) (ASL* asl, int n, real *X, fint *nerror);
@@ -35,6 +37,21 @@ import (
 	"math"
 	"unsafe"
 )
+
+// A placeholder for +/-Inf for finite calculations
+var Plinf = 1.0e10
+
+// The feasibility tolerance to check whether constraints are satisfied
+var Featol = 1.0e-6
+
+func clampInfinity(val float64) float64 {
+	if math.IsInf(val, 1) {
+		return Plinf
+	} else if math.IsInf(val, -1) {
+		return -1 * Plinf
+	}
+	return val
+}
 
 type Problem struct {
 	Name	string
@@ -135,8 +152,9 @@ func (p *Problem) objGrad(index int, x []float64) ([]float64, error) {
 	var err C.fint
 	grad := make([]float64, numVariables)
 	C.callGrdFunc(unsafe.Pointer(p.asl.p.Objgrd), p.asl, C.int(index), (*C.real)(unsafe.Pointer(&x[0])), (*C.real)(unsafe.Pointer(&grad[0])), &err)
+	fmt.Printf("Error: %v\n", err)
 	if err != 0 {
-		return nil, fmt.Errorf("Error: %i when evaluating objective value", err)
+		return nil, fmt.Errorf("Error: %i when evaluating objective gradient", err)
 	}
 	return grad, nil
 }
@@ -221,8 +239,8 @@ func (p *Problem) Variables() []Variable {
 		name := C.GoString(C.var_name_ASL(p.asl, C.int(j)))
 		variables[j].Name = name
 		variables[j].Type = VariableReal
-		variables[j].LowerBound = float64(bounds[j*2])
-		variables[j].UpperBound = float64(bounds[j*2+1])
+		variables[j].lowerBound = float64(bounds[j*2])
+		variables[j].upperBound = float64(bounds[j*2+1])
 		variables[j].Index = j 
 		j++
 	}
@@ -230,10 +248,10 @@ func (p *Problem) Variables() []Variable {
 	for i := 0; i < numBothInt; i++ {
 		name := C.GoString(C.var_name_ASL(p.asl, C.int(j)))
 		variables[j].Name = name
-		variables[j].LowerBound = float64(bounds[j*2])
-		variables[j].UpperBound = float64(bounds[j*2+1])
+		variables[j].lowerBound = float64(bounds[j*2])
+		variables[j].upperBound = float64(bounds[j*2+1])
 		// Integer variables may in fact be binary - check if the bounds are 0 and 1
-		if variables[j].LowerBound == 0 && variables[j].UpperBound == 1 {
+		if variables[j].lowerBound == 0 && variables[j].upperBound == 1 {
 			variables[j].Type = VariableBinary
 		} else {
 			variables[j].Type = VariableInteger
@@ -246,8 +264,8 @@ func (p *Problem) Variables() []Variable {
 		name := C.GoString(C.var_name_ASL(p.asl, C.int(j)))
 		variables[j].Name = name
 		variables[j].Type = VariableReal
-		variables[j].LowerBound = float64(bounds[j*2])
-		variables[j].UpperBound = float64(bounds[j*2+1])
+		variables[j].lowerBound = float64(bounds[j*2])
+		variables[j].upperBound = float64(bounds[j*2+1])
 		variables[j].Index = j
 		j++
 	}
@@ -255,10 +273,10 @@ func (p *Problem) Variables() []Variable {
 	for i := 0; i < numConstInt; i++ {
 		name := C.GoString(C.var_name_ASL(p.asl, C.int(j)))
 		variables[j].Name = name
-		variables[j].LowerBound = float64(bounds[j*2])
-		variables[j].UpperBound = float64(bounds[j*2+1])
+		variables[j].lowerBound = float64(bounds[j*2])
+		variables[j].upperBound = float64(bounds[j*2+1])
 		// Integer variables may in fact be binary - check if the bounds are 0 and 1
-		if variables[j].LowerBound == 0 && variables[j].UpperBound == 1 {
+		if variables[j].lowerBound == 0 && variables[j].upperBound == 1 {
 			variables[j].Type = VariableBinary
 		} else {
 			variables[j].Type = VariableInteger
@@ -271,8 +289,8 @@ func (p *Problem) Variables() []Variable {
 		name := C.GoString(C.var_name_ASL(p.asl, C.int(j)))
 		variables[j].Name = name
 		variables[j].Type = VariableReal
-		variables[j].LowerBound = float64(bounds[j*2])
-		variables[j].UpperBound = float64(bounds[j*2+1])
+		variables[j].lowerBound = float64(bounds[j*2])
+		variables[j].upperBound = float64(bounds[j*2+1])
 		variables[j].Index = j
 		j++
 	}
@@ -280,10 +298,10 @@ func (p *Problem) Variables() []Variable {
 	for i := 0; i < numObjInt; i++ {
 		name := C.GoString(C.var_name_ASL(p.asl, C.int(j)))
 		variables[j].Name = name
-		variables[j].LowerBound = float64(bounds[j*2])
-		variables[j].UpperBound = float64(bounds[j*2+1])
+		variables[j].lowerBound = float64(bounds[j*2])
+		variables[j].upperBound = float64(bounds[j*2+1])
 		// Integer variables may in fact be binary - check if the bounds are 0 and 1
-		if variables[j].LowerBound == 0 && variables[j].UpperBound == 1 {
+		if variables[j].lowerBound == 0 && variables[j].upperBound == 1 {
 			variables[j].Type = VariableBinary
 		} else {
 			variables[j].Type = VariableInteger
@@ -296,8 +314,8 @@ func (p *Problem) Variables() []Variable {
 		name := C.GoString(C.var_name_ASL(p.asl, C.int(j)))
 		variables[j].Name = name
 		variables[j].Type = VariableArc
-		variables[j].LowerBound = float64(bounds[j*2])
-		variables[j].UpperBound = float64(bounds[j*2+1])
+		variables[j].lowerBound = float64(bounds[j*2])
+		variables[j].upperBound = float64(bounds[j*2+1])
 		variables[j].Index = j
 		j++
 	}
@@ -306,8 +324,8 @@ func (p *Problem) Variables() []Variable {
 		name := C.GoString(C.var_name_ASL(p.asl, C.int(j)))
 		variables[j].Name = name
 		variables[j].Type = VariableReal
-		variables[j].LowerBound = float64(bounds[j*2])
-		variables[j].UpperBound = float64(bounds[j*2+1])
+		variables[j].lowerBound = float64(bounds[j*2])
+		variables[j].upperBound = float64(bounds[j*2+1])
 		variables[j].Index = j
 		j++
 	}
@@ -316,8 +334,8 @@ func (p *Problem) Variables() []Variable {
 		name := C.GoString(C.var_name_ASL(p.asl, C.int(j)))
 		variables[j].Name = name
 		variables[j].Type = VariableBinary
-		variables[j].LowerBound = float64(bounds[j*2])
-		variables[j].UpperBound = float64(bounds[j*2+1])
+		variables[j].lowerBound = float64(bounds[j*2])
+		variables[j].upperBound = float64(bounds[j*2+1])
 		variables[j].Index = j
 		j++
 	}
@@ -326,8 +344,8 @@ func (p *Problem) Variables() []Variable {
 		name := C.GoString(C.var_name_ASL(p.asl, C.int(j)))
 		variables[j].Name = name
 		variables[j].Type = VariableInteger
-		variables[j].LowerBound = float64(bounds[j*2])
-		variables[j].UpperBound = float64(bounds[j*2+1])
+		variables[j].lowerBound = float64(bounds[j*2])
+		variables[j].upperBound = float64(bounds[j*2+1])
 		variables[j].Index = j
 		j++
 	}
@@ -340,6 +358,8 @@ func ProblemFromFile(path string) (*Problem) {
 	asl := C.ASL_alloc(C.ASL_read_pfgh)
 	nl := C.jac0dim_ASL(asl, pathC, C.ftnlen(len(path)))
 	C.pfgh_read_ASL(asl, nl, C.ASL_find_o_class|C.ASL_find_c_class)
+	asl.i.err_jmp_=C.null
+	asl.i.err_jmp1_=C.null
 	aslPfgh := (*C.ASL_pfgh)(unsafe.Pointer(asl))
 	return &Problem {path, asl, aslPfgh}
 }

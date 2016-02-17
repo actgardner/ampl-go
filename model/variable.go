@@ -30,15 +30,25 @@ func (t VariableType) String() string {
 type Variable struct {
 	Name string
 	Type VariableType
-	LowerBound float64
-	UpperBound float64
+	lowerBound float64
+	upperBound float64
 	Index int
+}
+
+/* Get the upper bound - if the bound is +Inf, truncate to Plinf */ 
+func (v Variable) UpperBound() float64 {
+	return clampInfinity(v.upperBound)
+}
+
+/* Get the lower bound - if the bound is -Inf, truncate to -Plinf */ 
+func (v Variable) LowerBound() float64 {
+	return clampInfinity(v.lowerBound)
 }
 
 func (v Variable) String() string {
 	str := "Name: " + v.Name
 	str += " Type: " + v.Type.String()
-	str += " Min: " + strconv.FormatFloat(v.LowerBound, 'E', -1, 64)
-	str += " Max: " + strconv.FormatFloat(v.UpperBound, 'E', -1, 64)
+	str += " Min: " + strconv.FormatFloat(v.LowerBound(), 'E', -1, 64)
+	str += " Max: " + strconv.FormatFloat(v.UpperBound(), 'E', -1, 64)
 	return str
 }
