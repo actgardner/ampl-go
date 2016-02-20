@@ -89,7 +89,7 @@ typedef Long ftnlen;
 
  typedef size_t (*Fwrite)(const void*, size_t, size_t, FILE*);
  typedef int (*Add_Indicator)(void*, int, int, int, int, int*, real*, real);
- typedef struct {jmp_buf jb;} Jmp_buf;
+ typedef struct {jmp_buf jb; int err;} Jmp_buf;
  typedef struct ASL ASL;
  typedef struct MPEC_Adjust MPEC_Adjust;
  typedef struct Objrep Objrep;

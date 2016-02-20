@@ -146,7 +146,7 @@ xp2known_ASL(ASL* asl, real *X, fint *nerror)
 		return;
 	if (nerror && *nerror >= 0) {
 		err_jmp = &err_jmp0;
-		ij = setjmp(err_jmp0.jb);
+		ij = __builtin_setjmp(err_jmp0.jb);
 		if ((*nerror = ij))
 			goto done;
 		}

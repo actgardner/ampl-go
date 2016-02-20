@@ -1161,7 +1161,7 @@ rcompj(const void *a, const void *b, void *v)
 
 	if (!t) {
 		J = (jb_st*)v;
-		longjmp(J->jb, 1);
+		__builtin_longjmp(J->jb, 1);
 		}
 	return t < 0 ? -1 : 1;
 	}
@@ -1186,7 +1186,7 @@ f_OPALLDIFF(expr *e A_ASL)
 		*r1++ = (*e->op)(e K_ASL);
 		}
 	t = 1.;
-	if (setjmp(J.jb)) {
+	if (__builtin_setjmp(J.jb)) {
 		t = 0.;
 		goto done;
 		}

@@ -1434,7 +1434,7 @@ fg_read_ASL(ASL *a, FILE *nl, int flags)
 	R = EdReadInit_ASL(&ER, a, nl, S);
 	if (flags & ASL_return_read_err) {
 		a->i.err_jmp_ = &JB;
-		i = setjmp(JB.jb);
+		i = __builtin_setjmp(JB.jb);
 		if (i) {
 			a->i.err_jmp_ = 0;
 			return i;

@@ -137,7 +137,8 @@ report_where(ASL *asl)
 jmp_check(Jmp_buf *J, int jv)
 {
 	if (J)
-		longjmp(J->jb, jv);
+		J->err = jv;
+		__builtin_longjmp(J->jb, 1);
 	}
 
  static void

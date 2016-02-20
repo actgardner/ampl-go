@@ -45,9 +45,11 @@ cival(ASL_fg *asl, int i, real *X, fint *nerror)
 
 	if (nerror && *nerror >= 0) {
 		err_jmp = &err_jmp0;
-		ij = setjmp(err_jmp0.jb);
-		if ((*nerror = ij))
+		ij = __builtin_setjmp(err_jmp0.jb);
+		if (ij) {
+			*nerror = err_jmp0.err;
 			return 0.;
+			}
 		}
 	want_deriv = want_derivs;
 	errno = 0;	/* in case f77 set errno opening files */
@@ -119,9 +121,11 @@ con1grd(ASL *a, int i, real *X, real *G, fint *nerror)
 		No_derivs_ASL(who);
 	if (nerror && *nerror >= 0) {
 		err_jmp = &err_jmp0;
-		ij = setjmp(err_jmp0.jb);
-		if ((*nerror = ij))
+		ij = __builtin_setjmp(err_jmp0.jb);
+		if (ij) {
+			*nerror = err_jmp0.err;
 			return;
+			}
 		}
 	errno = 0;	/* in case f77 set errno opening files */
 	if (!asl->i.x_known)

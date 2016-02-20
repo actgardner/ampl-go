@@ -75,9 +75,11 @@ x2known_ASL(ASL *a, real *X, fint *nerror)
 		return;
 	if (nerror && *nerror >= 0) {
 		a->i.err_jmp_ = &err_jmp0;
-		ij = setjmp(err_jmp0.jb);
-		if ((*nerror = ij))
+		ij = __builtin_setjmp(err_jmp0.jb);
+		if (ij) {
+			*nerror = err_jmp0.err;
 			goto done;
+			}
 		}
 	errno = 0;	/* in case f77 set errno opening files */
 	x2_check_ASL((ASL_fgh*)a, X);

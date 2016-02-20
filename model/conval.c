@@ -40,7 +40,7 @@ con1val_ASL(ASL *a, register real *X, real *F, fint *nerror)
 	asl = (ASL_fg *)a;
 	if (nerror && *nerror >= 0) {
 		err_jmp = &err_jmp0;
-		i = setjmp(err_jmp0.jb);
+		i = __builtin_setjmp(err_jmp0.jb);
 		if ((*nerror = i))
 			goto done;
 		}
@@ -110,7 +110,7 @@ jac1val_ASL(ASL *a, real *X, real *G, fint *nerror)
 	ne0 = -1;
 	if (nerror && (ne0 = *nerror) >= 0) {
 		err_jmp = &err_jmp0;
-		j = setjmp(err_jmp0.jb);
+		j = __builtin_setjmp(err_jmp0.jb);
 		if ((*nerror = j))
 			goto done;
 		}

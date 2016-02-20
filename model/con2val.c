@@ -40,9 +40,11 @@ con2val_ASL(ASL *a, real *X, real *F, fint *nerror)
 	asl = (ASL_fgh*)a;
 	if (nerror && *nerror >= 0) {
 		err_jmp = &err_jmp0;
-		i = setjmp(err_jmp0.jb);
-		if ((*nerror = i))
+		i = __builtin_setjmp(err_jmp0.jb);
+		if (i) {
+			*nerror = err_jmp0.err;
 			goto done;
+			}
 		}
 	want_deriv = want_derivs;
 	errno = 0;	/* in case f77 set errno opening files */
@@ -110,9 +112,11 @@ jac2val_ASL(ASL *a, real *X, real *G, fint *nerror)
 	ne0 = -1;
 	if (nerror && (ne0 = *nerror) >= 0) {
 		err_jmp = &err_jmp0;
-		L = setjmp(err_jmp0.jb);
-		if ((*nerror = L))
+		L = __builtin_setjmp(err_jmp0.jb);
+		if (L) {
+			*nerror = err_jmp0.err;
 			goto done;
+			}
 		}
 	errno = 0;	/* in case f77 set errno opening files */
 	if ((!asl->i.x_known && x2_check_ASL(asl,X))

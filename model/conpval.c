@@ -216,9 +216,11 @@ conpval_ASL(ASL *a, real *X, real *F, fint *nerror)
 	asl = (ASL_pfgh*)a;
 	if (nerror && *nerror >= 0) {
 		err_jmp = &err_jmp0;
-		i = setjmp(err_jmp0.jb);
-		if ((*nerror = i))
+		i = __builtin_setjmp(err_jmp0.jb);
+		if (i) {
+			*nerror = err_jmp0.err;
 			return;
+			}
 		}
 	want_deriv = want_derivs;
 	errno = 0;	/* in case f77 set errno opening files */
@@ -295,9 +297,11 @@ jacpval_ASL(ASL *a, real *X, real *G, fint *nerror)
 	ne0 = -1;
 	if (nerror && (ne0 = *nerror) >= 0) {
 		err_jmp = &err_jmp0;
-		i = setjmp(err_jmp0.jb);
-		if ((*nerror = i))
+		i = __builtin_setjmp(err_jmp0.jb);
+		if (i) {
+			*nerror = err_jmp0.err;
 			return;
+			}
 		}
 	errno = 0;	/* in case f77 set errno opening files */
 	if ((!asl->i.x_known && xp_check_ASL(asl,X))
@@ -422,9 +426,11 @@ objpval_ASL(ASL *a, int i, real *X, fint *nerror)
 	asl = (ASL_pfgh*)a;
 	if (nerror && *nerror >= 0) {
 		err_jmp = &err_jmp0;
-		ij = setjmp(err_jmp0.jb);
-		if ((*nerror = ij))
+		ij = __builtin_setjmp(err_jmp0.jb);
+		if (ij) {
+			*nerror = err_jmp0.err;
 			return 0.;
+			}
 		}
 	want_deriv = want_derivs;
 	errno = 0;	/* in case f77 set errno opening files */
@@ -477,9 +483,11 @@ objpgrd_ASL(ASL *a, int i, real *X, real *G, fint *nerror)
 	ne0 = -1;
 	if (nerror && (ne0 = *nerror) >= 0) {
 		err_jmp = &err_jmp0;
-		ij = setjmp(err_jmp0.jb);
-		if ((*nerror = ij))
+		ij = __builtin_setjmp(err_jmp0.jb);
+		if (ij) {
+			*nerror = err_jmp0.err;
 			return;
+			}
 		}
 	errno = 0;	/* in case f77 set errno opening files */
 	if (!asl->i.x_known)
@@ -568,9 +576,11 @@ cpval(ASL_pfgh *asl, int i, real *X, fint *nerror)
 
 	if (nerror && *nerror >= 0) {
 		err_jmp = &err_jmp0;
-		L = setjmp(err_jmp0.jb);
-		if ((*nerror = L))
+		L = __builtin_setjmp(err_jmp0.jb);
+		if (L) {
+			*nerror = err_jmp0.err;
 			return 0.;
+			}
 		}
 	want_deriv = want_derivs;
 	errno = 0;	/* in case f77 set errno opening files */
@@ -653,9 +663,11 @@ conpgrd_ASL(ASL *a, int i, real *X, real *G, fint *nerror)
 	ne0 = -1;
 	if (nerror && (ne0 = *nerror) >= 0) {
 		err_jmp = &err_jmp0;
-		i0 = setjmp(err_jmp0.jb);
-		if ((*nerror = i0))
+		i0 = __builtin_setjmp(err_jmp0.jb);
+		if (i0) {
+			*nerror = err_jmp0.err;
 			return;
+			}
 		}
 	errno = 0;	/* in case f77 set errno opening files */
 	if (!asl->i.x_known)

@@ -60,7 +60,7 @@ exit_ASL(EdRead *R, int n)
 {
 	Jmp_buf *J;
 	if ((J = R->asl->i.err_jmp_) && n > 0)
-		longjmp(J->jb, n);
+		__builtin_longjmp(J->jb, 1);
 	exit(n);
 	}
 

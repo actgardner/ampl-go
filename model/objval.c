@@ -75,9 +75,11 @@ x1known_ASL(ASL *asl, real *X, fint *nerror)
 		return;
 	if (nerror && *nerror >= 0) {
 		err_jmp = &err_jmp0;
-		ij = setjmp(err_jmp0.jb);
-		if ((*nerror = ij))
+		ij = __builtin_setjmp(err_jmp0.jb);
+		if (ij) {
+			*nerror = err_jmp0.err;
 			goto done;
+			}
 		}
 	errno = 0;	/* in case f77 set errno opening files */
 	x0_check_ASL((ASL_fg*)asl, X);
@@ -114,8 +116,9 @@ obj1val_ASL(ASL *a, int i, real *X, fint *nerror)
 	asl = (ASL_fg*)a;
 	if (nerror && *nerror >= 0) {
 		err_jmp = &err_jmp0;
-		ij = setjmp(err_jmp0.jb);
-		if ((*nerror = ij)) {
+		ij = __builtin_setjmp(err_jmp0.jb);
+		if (ij) {
+			*nerror = err_jmp0.err;
 			f = 0.;
 			goto done;
 			}
@@ -170,9 +173,11 @@ obj1grd_ASL(ASL *a, int i, real *X, real *G, fint *nerror)
 	ne0 = -1;
 	if (nerror && (ne0 = *nerror) >= 0) {
 		err_jmp = &err_jmp0;
-		ij = setjmp(err_jmp0.jb);
-		if ((*nerror = ij))
+		ij = __builtin_setjmp(err_jmp0.jb);
+		if (ij) {
+			*nerror = err_jmp0.err;
 			goto done;
+			}
 		}
 	errno = 0;	/* in case f77 set errno opening files */
 	if (!asl->i.x_known)
