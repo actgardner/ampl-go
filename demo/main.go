@@ -80,7 +80,7 @@ func main() {
 	vars := make([]float64, len(p.Variables())) 
 	rand.Seed(time.Now().Unix())
 	for i, v := range p.Variables() {
-		vars[i] = (rand.Float64() * (v.UpperBound - v.LowerBound)) + v.LowerBound	
+		vars[i] = (rand.Float64() * (v.UpperBound() - v.LowerBound())) + v.LowerBound()	
 		fmt.Printf("\t%v = %v\n", v.Name, vars[i])
 	}
 
@@ -90,7 +90,7 @@ func main() {
 		conVal, err := c.Value(vars)
 		if err != nil {
 			fmt.Printf("Error evaluating constraint %v: %v\n", c.Name, err)
-			return
+			continue
 		}
 		fmt.Printf("\t%v = %v (satisfied: %v)\n", c.Name, conVal, c.IsSatisfied(conVal))		
 	}
@@ -101,7 +101,7 @@ func main() {
 		objVal, err := o.Value(vars)
 		if err != nil {
 			fmt.Printf("Error evaluating objective %v: %v\n", o.Name, err)
-			return
+			continue
 		}
 		fmt.Printf("\t%v = %v\n", o.Name, objVal)		
 	}
@@ -112,7 +112,7 @@ func main() {
 		conGrad, err := c.Gradient(vars)
 		if err != nil {
 			fmt.Printf("Error evaluating constraint gradient %v: %v\n", c.Name, err)
-			return
+			continue
 		}
 		fmt.Printf("\t%v = %v\n", c.Name, conGrad)	
 	}
@@ -123,7 +123,7 @@ func main() {
 		objGrad, err := o.Gradient(vars)
 		if err != nil {
 			fmt.Printf("Error evaluating objective gradient %v: %v\n", o.Name, err)
-			return
+			continue
 		}
 		fmt.Printf("\t%v = %v\n", o.Name, objGrad)
 	}
