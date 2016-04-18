@@ -1,7 +1,7 @@
 package model
 
 import (
-  "strconv"
+	"strconv"
 )
 
 type VariableType int
@@ -28,21 +28,21 @@ func (t VariableType) String() string {
 }
 
 type Variable struct {
-	Name string
-	Type VariableType
+	Name       string
+	Type       VariableType
 	lowerBound float64
 	upperBound float64
-	Index int
+	Index      int
 }
 
-/* Get the upper bound - if the bound is +Inf, truncate to Plinf */ 
+/* Get the upper bound */
 func (v Variable) UpperBound() float64 {
-	return clampInfinity(v.upperBound)
+	return v.upperBound
 }
 
-/* Get the lower bound - if the bound is -Inf, truncate to -Plinf */ 
+/* Get the lower bound */
 func (v Variable) LowerBound() float64 {
-	return clampInfinity(v.lowerBound)
+	return v.lowerBound
 }
 
 func (v Variable) String() string {

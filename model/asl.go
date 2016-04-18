@@ -44,15 +44,6 @@ var Plinfy = 1.0e10
 // The feasibility tolerance to check whether constraints are satisfied
 var Featol = 1.0e-6
 
-func clampInfinity(val float64) float64 {
-	if math.IsInf(val, 1) {
-		return Plinfy
-	} else if math.IsInf(val, -1) {
-		return -1 * Plinfy
-	}
-	return val
-}
-
 type Problem struct {
 	Name    string
 	asl     *C.struct_ASL
@@ -265,7 +256,13 @@ func (p *Problem) Variables() []Variable {
 		variables[j].Name = name
 		variables[j].Type = VariableReal
 		variables[j].lowerBound = float64(bounds[j*2])
+		if math.IsInf(variables[j].lowerBound, 0) {
+			variables[j].lowerBound = -1 * Plinfy
+		}
 		variables[j].upperBound = float64(bounds[j*2+1])
+		if math.IsInf(variables[j].upperBound, 0) {
+			variables[j].upperBound = Plinfy
+		}
 		variables[j].Index = j
 		j++
 	}
