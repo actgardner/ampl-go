@@ -39,31 +39,31 @@ import (
 )
 
 // A placeholder for +/-Inf for finite calculations
-var Plinf = 1.0e10
+var Plinfy = 1.0e10
 
 // The feasibility tolerance to check whether constraints are satisfied
 var Featol = 1.0e-6
 
 func clampInfinity(val float64) float64 {
 	if math.IsInf(val, 1) {
-		return Plinf
+		return Plinfy
 	} else if math.IsInf(val, -1) {
-		return -1 * Plinf
+		return -1 * Plinfy
 	}
 	return val
 }
 
 type Problem struct {
-	Name	string
-	asl	*C.struct_ASL
-	aslPfgh	*C.struct_ASL_pfgh
+	Name    string
+	asl     *C.struct_ASL
+	aslPfgh *C.struct_ASL_pfgh
 }
 
 /* Get the list of Constraints in this problem */
 func (p *Problem) Constraints() []Constraint {
 	numConstraints := int(p.asl.i.n_con_)
 	constraints := make([]Constraint, numConstraints)
-	bounds := (*[1 << 30]C.real)(unsafe.Pointer(p.asl.i.LUrhs_))[:numConstraints*2:numConstraints*2]
+	bounds := (*[1 << 30]C.real)(unsafe.Pointer(p.asl.i.LUrhs_))[:numConstraints*2 : numConstraints*2]
 	cgradList := (*[1 << 30]*C.struct_cgrad)(unsafe.Pointer(p.asl.i.Cgrad_))[:numConstraints:numConstraints]
 	cClassList := (*[1 << 30]C.char)(unsafe.Pointer(p.aslPfgh.I.c_class))[:numConstraints:numConstraints]
 	vars := p.Variables()
@@ -76,11 +76,11 @@ func (p *Problem) Constraints() []Constraint {
 
 		var conType ConstraintSense
 		if upperIsInf && !lowerIsInf {
-			conType = ConstraintGreaterThan	
+			conType = ConstraintGreaterThan
 		} else if !upperIsInf && lowerIsInf {
 			conType = ConstraintLessThan
 		} else if bounds[i*2] == bounds[i*2+1] {
-			conType = ConstraintEqualTo	
+			conType = ConstraintEqualTo
 		} else if !upperIsInf && !lowerIsInf {
 			conType = ConstraintRange
 		} else {
@@ -107,12 +107,12 @@ func (p *Problem) Constraints() []Constraint {
 /* Get the list of Objectives in this problem */
 func (p *Problem) Objectives() []Objective {
 	numObjectives := int(p.asl.i.n_obj_)
-	
+
 	objectives := make([]Objective, numObjectives)
-	objectiveSenses := (*[1<<30]byte)(unsafe.Pointer(p.asl.i.objtype_))[:numObjectives:numObjectives]
+	objectiveSenses := (*[1 << 30]byte)(unsafe.Pointer(p.asl.i.objtype_))[:numObjectives:numObjectives]
 	ogradList := (*[1 << 30]*C.struct_ograd)(unsafe.Pointer(p.asl.i.Ograd_))[:numObjectives:numObjectives]
 	oClassList := (*[1 << 30]C.char)(unsafe.Pointer(p.aslPfgh.I.o_class))[:numObjectives:numObjectives]
-	vars := p.Variables()	
+	vars := p.Variables()
 	for i := 0; i < numObjectives; i++ {
 		name := C.GoString(C.obj_name_ASL(p.asl, C.int(i)))
 		objectives[i].Name = name
@@ -120,21 +120,21 @@ func (p *Problem) Objectives() []Objective {
 		objectives[i].Index = i
 		objectives[i].Shape = Shape(oClassList[i])
 		objectives[i].p = p
-	
+
 		gradPtr := ogradList[i]
 		for gradPtr != nil {
 			objectives[i].Variables = append(objectives[i].Variables, vars[gradPtr.varno])
 			gradPtr = (*gradPtr).next
 		}
-	}	
-	
+	}
+
 	return objectives
 }
 
 func (p *Problem) objValue(index int, x []float64) (float64, error) {
 	numVariables := int(p.asl.i.n_var_)
 	if len(x) != numVariables {
-		return 0, fmt.Errorf("Error: Incorrect number of variables in input: expected %i, got %i", numVariables, len(x)) 
+		return 0, fmt.Errorf("Error: Incorrect number of variables in input: expected %i, got %i", numVariables, len(x))
 	}
 	var err C.fint
 	val := C.callValFunc(unsafe.Pointer(p.asl.p.Objval), p.asl, C.int(index), (*C.real)(unsafe.Pointer(&x[0])), &err)
@@ -147,7 +147,7 @@ func (p *Problem) objValue(index int, x []float64) (float64, error) {
 func (p *Problem) objGrad(index int, x []float64) ([]float64, error) {
 	numVariables := int(p.asl.i.n_var_)
 	if len(x) != numVariables {
-		return nil, fmt.Errorf("Error: Incorrect number of variables in input: expected %i, got %i", numVariables, len(x)) 
+		return nil, fmt.Errorf("Error: Incorrect number of variables in input: expected %i, got %i", numVariables, len(x))
 	}
 	var err C.fint
 	grad := make([]float64, numVariables)
@@ -162,7 +162,7 @@ func (p *Problem) objGrad(index int, x []float64) ([]float64, error) {
 func (p *Problem) conValue(index int, x []float64) (float64, error) {
 	numVariables := int(p.asl.i.n_var_)
 	if len(x) != numVariables {
-		return 0, fmt.Errorf("Error: Incorrect number of variables in input: expected %i, got %i", numVariables, len(x)) 
+		return 0, fmt.Errorf("Error: Incorrect number of variables in input: expected %i, got %i", numVariables, len(x))
 	}
 	var err C.fint
 	val := C.callValFunc(unsafe.Pointer(p.asl.p.Conival), p.asl, C.int(index), (*C.real)(unsafe.Pointer(&x[0])), &err)
@@ -175,7 +175,7 @@ func (p *Problem) conValue(index int, x []float64) (float64, error) {
 func (p *Problem) conGrad(index int, x []float64) ([]float64, error) {
 	numVariables := int(p.asl.i.n_var_)
 	if len(x) != numVariables {
-		return nil, fmt.Errorf("Error: Incorrect number of variables in input: expected %i, got %i", numVariables, len(x)) 
+		return nil, fmt.Errorf("Error: Incorrect number of variables in input: expected %i, got %i", numVariables, len(x))
 	}
 	var err C.fint
 	grad := make([]float64, numVariables)
@@ -191,7 +191,7 @@ func (p *Problem) ConstraintValues(x []float64) ([]float64, error) {
 	numVariables := int(p.asl.i.n_var_)
 	numConstraints := int(p.asl.i.n_con_)
 	if len(x) != numVariables {
-		return nil, fmt.Errorf("Error: Incorrect number of variables in input: expected %i, got %i", numVariables, len(x)) 
+		return nil, fmt.Errorf("Error: Incorrect number of variables in input: expected %i, got %i", numVariables, len(x))
 	}
 	var err C.fint
 	vals := make([]float64, numConstraints)
@@ -207,16 +207,16 @@ func (p *Problem) ConstraintJacobian(x []float64) ([]float64, error) {
 	numVariables := int(p.asl.i.n_var_)
 	numConstraints := int(p.asl.i.n_con_)
 	if len(x) != numVariables {
-		return nil, fmt.Errorf("Error: Incorrect number of variables in input: expected %i, got %i", numVariables, len(x)) 
+		return nil, fmt.Errorf("Error: Incorrect number of variables in input: expected %i, got %i", numVariables, len(x))
 	}
 	var err C.fint
-	vals := make([]float64, numConstraints * numVariables)
+	vals := make([]float64, numConstraints*numVariables)
 	C.callJacFunc(unsafe.Pointer(p.asl.p.Jacval), p.asl, (*C.real)(unsafe.Pointer(&x[0])), (*C.real)(unsafe.Pointer(&vals[0])), &err)
 	if err != 0 {
 		return nil, fmt.Errorf("Error: %i when evaluating constraint Jacobian", err)
 	}
 	return vals, nil
-} 
+}
 
 /* Get the list of Variables in this problem */
 func (p *Problem) Variables() []Variable {
@@ -228,20 +228,20 @@ func (p *Problem) Variables() []Variable {
 	numConstInt := int(p.asl.i.nlvci_)
 	numObj := int(p.asl.i.nlvo_)
 	numObjInt := int(p.asl.i.nlvoi_)
-	numLinearArcs := int(p.asl.i.nwv_)	
-	numBinary := int(p.asl.i.nbv_)	
+	numLinearArcs := int(p.asl.i.nwv_)
+	numBinary := int(p.asl.i.nbv_)
 	numNonBinaryInt := int(p.asl.i.niv_)
 	variables := make([]Variable, numVariables)
-	bounds := (*[1 << 30]C.real)(unsafe.Pointer(p.asl.i.LUv_))[:numVariables*2:numVariables*2]
+	bounds := (*[1 << 30]C.real)(unsafe.Pointer(p.asl.i.LUv_))[:numVariables*2 : numVariables*2]
 
 	j := 0
-	for i := 0; i < numBoth - numBothInt; i++ {
+	for i := 0; i < numBoth-numBothInt; i++ {
 		name := C.GoString(C.var_name_ASL(p.asl, C.int(j)))
 		variables[j].Name = name
 		variables[j].Type = VariableReal
 		variables[j].lowerBound = float64(bounds[j*2])
 		variables[j].upperBound = float64(bounds[j*2+1])
-		variables[j].Index = j 
+		variables[j].Index = j
 		j++
 	}
 
@@ -260,7 +260,7 @@ func (p *Problem) Variables() []Variable {
 		j++
 	}
 
-	for i := 0; i < numConst - (numBoth + numConstInt); i++ {
+	for i := 0; i < numConst-(numBoth+numConstInt); i++ {
 		name := C.GoString(C.var_name_ASL(p.asl, C.int(j)))
 		variables[j].Name = name
 		variables[j].Type = VariableReal
@@ -285,7 +285,7 @@ func (p *Problem) Variables() []Variable {
 		j++
 	}
 
-	for i := 0; i < numObj - (numConst + numObjInt); i++ {
+	for i := 0; i < numObj-(numConst+numObjInt); i++ {
 		name := C.GoString(C.var_name_ASL(p.asl, C.int(j)))
 		variables[j].Name = name
 		variables[j].Type = VariableReal
@@ -320,7 +320,7 @@ func (p *Problem) Variables() []Variable {
 		j++
 	}
 
-	for i := 0; i < numVariables - (numNonLinear + numBinary + numNonBinaryInt + numLinearArcs); i++ {
+	for i := 0; i < numVariables-(numNonLinear+numBinary+numNonBinaryInt+numLinearArcs); i++ {
 		name := C.GoString(C.var_name_ASL(p.asl, C.int(j)))
 		variables[j].Name = name
 		variables[j].Type = VariableReal
@@ -353,15 +353,15 @@ func (p *Problem) Variables() []Variable {
 }
 
 /* Load a problem from a `.nl` file */
-func ProblemFromFile(path string) (*Problem) {
+func ProblemFromFile(path string) *Problem {
 	pathC := C.CString(path)
 	asl := C.ASL_alloc(C.ASL_read_pfgh)
 	nl := C.jac0dim_ASL(asl, pathC, C.ftnlen(len(path)))
 	C.pfgh_read_ASL(asl, nl, C.ASL_find_o_class|C.ASL_find_c_class)
-	asl.i.err_jmp_=C.null
-	asl.i.err_jmp1_=C.null
+	asl.i.err_jmp_ = C.null
+	asl.i.err_jmp1_ = C.null
 	aslPfgh := (*C.ASL_pfgh)(unsafe.Pointer(asl))
-	return &Problem {path, asl, aslPfgh}
+	return &Problem{path, asl, aslPfgh}
 }
 
 /* Return the larger integer */
