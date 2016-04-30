@@ -230,8 +230,8 @@ func (p *Problem) Variables() []Variable {
 		name := C.GoString(C.var_name_ASL(p.asl, C.int(j)))
 		variables[j].Name = name
 		variables[j].Type = VariableReal
-		variables[j].lowerBound = float64(bounds[j*2])
-		variables[j].upperBound = float64(bounds[j*2+1])
+		variables[j].LowerBound = math.Max(float64(bounds[j*2]), -Plinfy)
+		variables[j].UpperBound = math.Min(float64(bounds[j*2+1]), Plinfy)
 		variables[j].Index = j
 		j++
 	}
@@ -239,10 +239,10 @@ func (p *Problem) Variables() []Variable {
 	for i := 0; i < numBothInt; i++ {
 		name := C.GoString(C.var_name_ASL(p.asl, C.int(j)))
 		variables[j].Name = name
-		variables[j].lowerBound = float64(bounds[j*2])
-		variables[j].upperBound = float64(bounds[j*2+1])
+		variables[j].LowerBound = math.Max(float64(bounds[j*2]), -Plinfy)
+		variables[j].UpperBound = math.Min(float64(bounds[j*2+1]), Plinfy)
 		// Integer variables may in fact be binary - check if the bounds are 0 and 1
-		if variables[j].lowerBound == 0 && variables[j].upperBound == 1 {
+		if variables[j].LowerBound == 0 && variables[j].UpperBound == 1 {
 			variables[j].Type = VariableBinary
 		} else {
 			variables[j].Type = VariableInteger
@@ -255,14 +255,8 @@ func (p *Problem) Variables() []Variable {
 		name := C.GoString(C.var_name_ASL(p.asl, C.int(j)))
 		variables[j].Name = name
 		variables[j].Type = VariableReal
-		variables[j].lowerBound = float64(bounds[j*2])
-		if math.IsInf(variables[j].lowerBound, 0) {
-			variables[j].lowerBound = -1 * Plinfy
-		}
-		variables[j].upperBound = float64(bounds[j*2+1])
-		if math.IsInf(variables[j].upperBound, 0) {
-			variables[j].upperBound = Plinfy
-		}
+		variables[j].LowerBound = math.Max(float64(bounds[j*2]), -Plinfy)
+		variables[j].UpperBound = math.Min(float64(bounds[j*2+1]), Plinfy)
 		variables[j].Index = j
 		j++
 	}
@@ -270,10 +264,10 @@ func (p *Problem) Variables() []Variable {
 	for i := 0; i < numConstInt; i++ {
 		name := C.GoString(C.var_name_ASL(p.asl, C.int(j)))
 		variables[j].Name = name
-		variables[j].lowerBound = float64(bounds[j*2])
-		variables[j].upperBound = float64(bounds[j*2+1])
+		variables[j].LowerBound = math.Max(float64(bounds[j*2]), -Plinfy)
+		variables[j].UpperBound = math.Min(float64(bounds[j*2+1]), Plinfy)
 		// Integer variables may in fact be binary - check if the bounds are 0 and 1
-		if variables[j].lowerBound == 0 && variables[j].upperBound == 1 {
+		if variables[j].LowerBound == 0 && variables[j].UpperBound == 1 {
 			variables[j].Type = VariableBinary
 		} else {
 			variables[j].Type = VariableInteger
@@ -286,8 +280,8 @@ func (p *Problem) Variables() []Variable {
 		name := C.GoString(C.var_name_ASL(p.asl, C.int(j)))
 		variables[j].Name = name
 		variables[j].Type = VariableReal
-		variables[j].lowerBound = float64(bounds[j*2])
-		variables[j].upperBound = float64(bounds[j*2+1])
+		variables[j].LowerBound = math.Max(float64(bounds[j*2]), -Plinfy)
+		variables[j].UpperBound = math.Min(float64(bounds[j*2+1]), Plinfy)
 		variables[j].Index = j
 		j++
 	}
@@ -295,10 +289,10 @@ func (p *Problem) Variables() []Variable {
 	for i := 0; i < numObjInt; i++ {
 		name := C.GoString(C.var_name_ASL(p.asl, C.int(j)))
 		variables[j].Name = name
-		variables[j].lowerBound = float64(bounds[j*2])
-		variables[j].upperBound = float64(bounds[j*2+1])
+		variables[j].LowerBound = math.Max(float64(bounds[j*2]), -Plinfy)
+		variables[j].UpperBound = math.Min(float64(bounds[j*2+1]), Plinfy)
 		// Integer variables may in fact be binary - check if the bounds are 0 and 1
-		if variables[j].lowerBound == 0 && variables[j].upperBound == 1 {
+		if variables[j].LowerBound == 0 && variables[j].UpperBound == 1 {
 			variables[j].Type = VariableBinary
 		} else {
 			variables[j].Type = VariableInteger
@@ -311,8 +305,8 @@ func (p *Problem) Variables() []Variable {
 		name := C.GoString(C.var_name_ASL(p.asl, C.int(j)))
 		variables[j].Name = name
 		variables[j].Type = VariableArc
-		variables[j].lowerBound = float64(bounds[j*2])
-		variables[j].upperBound = float64(bounds[j*2+1])
+		variables[j].LowerBound = math.Max(float64(bounds[j*2]), -Plinfy)
+		variables[j].UpperBound = math.Min(float64(bounds[j*2+1]), Plinfy)
 		variables[j].Index = j
 		j++
 	}
@@ -321,8 +315,8 @@ func (p *Problem) Variables() []Variable {
 		name := C.GoString(C.var_name_ASL(p.asl, C.int(j)))
 		variables[j].Name = name
 		variables[j].Type = VariableReal
-		variables[j].lowerBound = float64(bounds[j*2])
-		variables[j].upperBound = float64(bounds[j*2+1])
+		variables[j].LowerBound = math.Max(float64(bounds[j*2]), -Plinfy)
+		variables[j].UpperBound = math.Min(float64(bounds[j*2+1]), Plinfy)
 		variables[j].Index = j
 		j++
 	}
@@ -331,8 +325,8 @@ func (p *Problem) Variables() []Variable {
 		name := C.GoString(C.var_name_ASL(p.asl, C.int(j)))
 		variables[j].Name = name
 		variables[j].Type = VariableBinary
-		variables[j].lowerBound = float64(bounds[j*2])
-		variables[j].upperBound = float64(bounds[j*2+1])
+		variables[j].LowerBound = math.Max(float64(bounds[j*2]), -Plinfy)
+		variables[j].UpperBound = math.Min(float64(bounds[j*2+1]), Plinfy)
 		variables[j].Index = j
 		j++
 	}
@@ -341,8 +335,8 @@ func (p *Problem) Variables() []Variable {
 		name := C.GoString(C.var_name_ASL(p.asl, C.int(j)))
 		variables[j].Name = name
 		variables[j].Type = VariableInteger
-		variables[j].lowerBound = float64(bounds[j*2])
-		variables[j].upperBound = float64(bounds[j*2+1])
+		variables[j].LowerBound = math.Max(float64(bounds[j*2]), -Plinfy)
+		variables[j].UpperBound = math.Min(float64(bounds[j*2+1]), Plinfy)
 		variables[j].Index = j
 		j++
 	}
