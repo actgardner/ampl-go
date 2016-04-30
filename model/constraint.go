@@ -82,9 +82,9 @@ func (c Constraint) IsSatisfied(value float64) bool {
 	case ConstraintLessThan:
 		return value < c.Max+Featol
 	case ConstraintEqualTo:
-		return value > c.Min-Featol && value < c.Min+Featol
+		return (value > c.Min-Featol) && (value < c.Min+Featol)
 	case ConstraintRange:
-		return value > c.Min-Featol && value < c.Max+Featol
+		return (value > c.Min-Featol) && (value < c.Max+Featol)
 	}
 	return true
 }
